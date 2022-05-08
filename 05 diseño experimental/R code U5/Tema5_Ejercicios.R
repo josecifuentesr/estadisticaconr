@@ -52,10 +52,12 @@ PlantGrowth %>%
   anova_test(weight ~ group)
 
 
-PlantGrowth %>% pairwise_t_test(weight ~ group, p.adjust.method = "bonferroni", pool.sd=TRUE)
+PlantGrowth %>% pairwise_t_test(weight ~ group, 
+                                p.adjust.method = "bonferroni", pool.sd=TRUE)
 
 
-ggbetweenstats(x = group, y = weight, data = PlantGrowth, p.adjust.method = "bonferroni",
+ggbetweenstats(x = group, y = weight, data = PlantGrowth, 
+               p.adjust.method = "bonferroni",
                bf.message = FALSE, var.equal = TRUE, 
                ggsignif.args = list(textsize = 1.5, tip_length = 0.01)) +
   theme(text = element_text(size = 8), plot.subtitle = element_text(size=8) )
@@ -92,7 +94,8 @@ ggqqplot(bush.long,
          facet.by = "test")
 
 # esfericidad
-res.aov <- anova_test(data = bush.long, dv = score, wid = participant, within = test)
+res.aov <- anova_test(data = bush.long, dv = score, 
+                      wid = participant, within = test)
 
 res.aov$`Mauchly's Test for Sphericity`
 
@@ -143,7 +146,8 @@ goggles %>%
   group_by(gender) %>%
   pairwise_t_test(attractiveness ~ alcohol, p.adjust.method = "holm") 
 
-grouped_ggbetweenstats(data = goggles, x = alcohol, y = attractiveness, grouping.var = gender,
+grouped_ggbetweenstats(data = goggles, x = alcohol, 
+                       y = attractiveness, grouping.var = gender,
   results.subtitle = F, messages = F, var.equal = T, p.adjust.method = "holm")
 
 #-------------------------------- Ejercicio 4 --------------------------------#
@@ -183,7 +187,8 @@ res.aov <- anova_test(data = hangover,
                       dv = symptoms, wid = id, between = group, within = time )
 get_anova_table(res.aov) # aplica corrección automática
 
-grouped_ggwithinstats(data = hangover, x = time, y = symptoms, grouping.var = group,
+grouped_ggwithinstats(data = hangover, x = time, y = symptoms, 
+                      grouping.var = group,
   results.subtitle = F, messages = F, var.equal = T, p.adjust.method = "holm")
 
 #-------------------------------- Ejercicio 5 --------------------------------#
@@ -232,7 +237,8 @@ fit <- lm(yield ~ + block + variety, oatvar)
 
 bxp <- ggboxplot( oatvar, x = "variety", y = "yield", color = "variety")
 pwc <- pwc %>% add_xy_position(x = "variety")
-bxp + stat_pvalue_manual(pwc, hide.ns = TRUE) + labs( subtitle = get_test_label(res.aov, detailed = T), 
+bxp + stat_pvalue_manual(pwc, hide.ns = TRUE) + 
+  labs( subtitle = get_test_label(res.aov, detailed = T), 
  caption = get_pwc_label(pwc) )
 
 #-------------------------------- Ejercicio 6 --------------------------------#
@@ -245,7 +251,8 @@ sexab %>%
   get_summary_stats(ptsd, cpa, type = "mean_sd")
 
 
-ggscatter(sexab, x = "cpa", y = "ptsd", color = "csa", add = "reg.line", size = 1) 
+ggscatter(sexab, x = "cpa", y = "ptsd", color = "csa", 
+          add = "reg.line", size = 1) 
 
 
 # Homogeneidad de las pendientes de regresión
@@ -275,7 +282,7 @@ ggline(get_emmeans(pwc), x = "csa", y = "emmean") +
         caption = get_pwc_label(pwc) ) + theme(text = element_text(size = 8) )
 
 
-#-------------------------------- Ejercicios 7 y 8 --------------------------------#
+#-------------------------------- Ejercicios 7 y 8 ---------------------------#
 library(pwr) 
 pwr.t.test(d=(0-10)/16.03,power=.8,sig.level=.05,
            type="two.sample", alternative="two.sided")
