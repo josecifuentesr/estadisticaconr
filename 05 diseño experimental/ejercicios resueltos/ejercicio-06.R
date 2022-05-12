@@ -76,3 +76,11 @@ ggline(get_emmeans(pwc), x = "csa", y = "emmean") +
   stat_pvalue_manual(pwc, hide.ns = TRUE, tip.length = FALSE) +
   labs( subtitle = get_test_label(res.aov, detailed = TRUE),
         caption = get_pwc_label(pwc) ) + theme(text = element_text(size = 8) )
+
+# Todos los términos (efectos principales) son significativos. P
+# ara graficar el modelo debemos recordar que al no haber interacción se puede 
+# pensar en el resultado como dos rectas paralelas.
+# 
+# Luego de controlar el efecto del abuso físico infantil, el efecto estimado del 
+# abuso sexual infantil es 6.273
+# mayor en los sujetos “Abused” que en los “NotAbused”.
