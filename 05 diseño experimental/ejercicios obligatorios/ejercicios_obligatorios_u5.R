@@ -8,6 +8,7 @@ library(asbio)
 library(emmeans)
 library(faraway)
 library(ggfortify)
+library(HSAUR)
 data(coagulation)
 head(coagulation)
 
@@ -76,3 +77,56 @@ ggbetweenstats(x = diet, y = coag, data = coagulation,
 # Desde el gráfico y la prueba se pueden hacer las siguientes observaciones
 # Se observan diferencias significativas entre los grupos: A y B, A y C, By D,
 # Cy D. 
+
+
+# Problema 02 -------------------------------------------------------------
+data(weightgain)
+head(weightgain)
+
+# Descripción de los datos
+# ganancia de peso por fuente
+weightgain %>% 
+  group_by(source, type) %>% 
+  get_summary_stats(weightgain, type = "mean_sd")
+
+# Evaluación de los supuestos
+# outliers
+weightgain %>% 
+  group_by(source, type) %>% 
+  identify_outliers(weightgain)
+# El conjunto de datos no presenta valores extremos
+
+# gráfico de outliers (no observados en este conjunto de datos)
+ggplot(data = weightgain, aes(x = source, y = weightgain)) + 
+  geom_boxplot(aes(fill = source), width = 0.8) + theme_bw()
+
+# normalidad
+weightgain %>% 
+  group_by(source, type) %>% 
+  shapiro_test(weightgain)
+# Se observa que los datos se distribuyen de forma normal
+
+# grafico de normalidad
+ggqqplot(weightgain, "weightgain", ggtheme = theme_bw()) +
+  facet_grid(source ~ type)
+
+# homocedasticidad
+weightgain %>% 
+  levene_test(weightgain ~ source * type)
+# se aprecia homocestadicidad en los datos
+
+# Prueba paramétrica de ANOVA
+weightgain %>% 
+  anova_test(weightgain ~ source * type)
+
+weightgain %>% 
+  group_by(source) %>%
+  pairwise_t_test(weightgain ~ type, p.adjust.method = "holm") 
+
+grouped_ggbetweenstats(data = weightgain, x = type, 
+                       y = weightgain, grouping.var = source,
+                       results.subtitle = F, messages = F, var.equal = T, 
+                       p.adjust.method = "holm")
+# En los valores de la prueba ANOVA se observa un efecto entre los que consumen
+# alta (high) y baja (low) cantidad de carne con p = 0.00494 (valor límite)
+# En el gráfico no se observan diferencias significativas con el ajuste de holm
