@@ -130,3 +130,123 @@ grouped_ggbetweenstats(data = weightgain, x = type,
 # En los valores de la prueba ANOVA se observa un efecto entre los que consumen
 # alta (high) y baja (low) cantidad de carne con p = 0.00494 (valor límite)
 # En el gráfico no se observan diferencias significativas con el ajuste de holm
+
+
+# Problema 03 -------------------------------------------------------------
+
+data("invisibility")
+head(invisibility)
+
+invisibility %>%
+  group_by(cloak) %>%
+  get_summary_stats(mischief1, mischief2, type = "mean_sd")
+
+# Gráfico para el supuesto de linealidad ----------------------------------
+
+ggscatter(invisibility, x = "mischief1", y = "mischief2", color = "cloak", 
+          add = "reg.line", size = 3) 
+# Vemos que los actos traviesos durante las segundas tres semana aumentan 
+# para el grupo con capa
+
+# Comprobación de supuestos
+# Homogeneidad de las pendientes de regresión
+model <- lm(mischief2 ~ mischief1*cloak, data = invisibility) # con interacción
+anova_test(model)
+
+# Normalidad, homogeneidad de varianza y outliers
+model <- lm(chief2 ~ chief1 + cloak, data = invisibilty) # sin interacción
+library(ggfortify)
+autoplot(model) + theme(text = element_text(size = 4) )
+
+# Se cumple el supuesto de homogeneidad de las pendientes de regresión, 
+# la interacción no es significativa
+
+# ajuste del modelo
+invisibility %>% anova_test(mischief2 ~ mischief1 + cloak)
+
+library(emmeans)
+pwc <- invisibility %>% 
+  emmeans_test(mischief2 ~ cloak, covariate = mischief1, 
+               p.adjust.method = "bonferroni")
+pwc
+
+get_emmeans(pwc) # medias ajustadas (marginales)
+pwc <- pwc %>% add_xy_position(x = "cloak", fun = "mean_se")
+
+ggline(get_emmeans(pwc), x = "cloak", y = "emmean") +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) + 
+  stat_pvalue_manual(pwc, hide.ns = TRUE, tip.length = FALSE) +
+  labs( subtitle = get_test_label(res.aov, detailed = TRUE),
+        caption = get_pwc_label(pwc) ) + theme(text = element_text(size = 8) )
+
+# Se observan diferencias significativas entre los que usaron capa y los que 
+# no. 
+
+
+# Problema 04 -------------------------------------------------------------
+
+# observación y descripción de los datos
+data("eggprod")
+head(eggprod)
+eggprod %>%
+  group_by(treat) %>%
+  get_summary_stats(eggs, 
+                    type = "mean_sd")
+
+table(eggprod[, -1]) # 1 réplica
+
+xtabs(eggs ~ block + treat, 
+      data = eggprod)
+
+# Evaluación de los supuestos
+# aditividad 
+library(asbio)
+with(eggprod, tukey.add.test(eggs, treat, block))
+
+# outliers
+eggprod %>% 
+  group_by(treat) %>% 
+  identify_outliers(eggs)
+
+# grafico
+ggplot(data = eggprod, aes(x = treat, y = eggs)) + 
+  geom_boxplot() + theme_bw()
+
+# normalidad
+eggprod %>%
+  group_by(treat) %>%
+  shapiro_test(eggs)
+
+# grafico
+ggqqplot(eggprod, "eggs", ggtheme = theme_bw()) +
+  facet_grid(eggprod$treat)
+
+# homocedasticidad
+eggprod %>% levene_test(eggs ~ treat)
+
+# Conclusiones
+# No existe interacción entre el bloque y el factor principal (tukey.add.test)
+# Existe un valor atípico extremo en el tratamiento E bloqque 1
+# Los datos siguen una distribución aproximadamente normal a excepción del
+# tratamiento E (se observa un outlier extremo)
+# Los datos son homocedásticos
+
+# ajuste del modelo
+( res.aov <- anova_test(data = eggprod, 
+                        formula = eggs ~ block + treat) )
+library(emmeans)
+fit <- lm(eggs ~ + block + treat, eggprod) 
+(pwc <- eggprod %>% 
+    emmeans_test(eggs ~ treat, model = fit) )
+
+# grafico
+bxp <- ggboxplot( eggprod, x = "treat", y = "eggs", color = "treat")
+pwc <- pwc %>% add_xy_position(x = "treat")
+bxp + stat_pvalue_manual(pwc, hide.ns = TRUE) + 
+  labs( subtitle = get_test_label(res.aov, detailed = T), 
+        caption = get_pwc_label(pwc) )
+
+# El término de bloque y del tratamiento son significativos p = 0.045. 
+# Nos interesa interpretar el tratamiento, cuyo efectoes moderado/fuerte 
+# (g=.64),detectamos que el tratamiento O  produce un rendimiento 
+# significativamente menor que la E y F
